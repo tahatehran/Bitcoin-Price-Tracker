@@ -1,3 +1,7 @@
+import ipaddress
+import socket
+from urllib.parse import urlparse
+
 import streamlit as st
 import requests
 import pandas as pd
@@ -6,17 +10,39 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
+ALLOWED_CURRENCIES = ['USD', 'EUR', 'GBP']
+
+# Fetch a URL only when it points at a public http/https host
+def safe_get(url):
+    parsed = urlparse(url)
+    if parsed.scheme not in ('http', 'https'):
+        raise ValueError(f'Unsupported URL scheme: {parsed.scheme}')
+    host = parsed.hostname or ''
+    try:
+        addr_infos = socket.getaddrinfo(host, None)
+    except socket.gaierror as exc:
+        raise ValueError(f'Cannot resolve host: {host}') from exc
+    for info in addr_infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if ip.is_loopback or ip.is_private or ip.is_reserved or ip.is_link_local or ip.is_multicast or ip.is_unspecified:
+            raise ValueError(f'Host resolves to a non-public address: {host}')
+    return requests.get(url, allow_redirects=False)
+
 # Function to get current Bitcoin price
 def get_current_bitcoin_price(currency='USD'):
+    if currency not in ALLOWED_CURRENCIES:
+        raise ValueError(f'Unsupported currency: {currency}')
     url = f'https://api.coindesk.com/v1/bpi/currentprice/{currency}.json'
-    response = requests.get(url)
+    response = safe_get(url)
     data = response.json()
     return data['bpi'][currency]['rate_float']
 
 # Function to get historical Bitcoin price data
 def get_historical_bitcoin_prices(currency='USD', days=30):
+    if currency not in ALLOWED_CURRENCIES:
+        raise ValueError(f'Unsupported currency: {currency}')
     url = f'https://api.coindesk.com/v1/bpi/historical/close.json?currency={currency}&start={datetime.now().strftime("%Y-%m-%d")}&end={datetime.now().strftime("%Y-%m-%d")}'
-    response = requests.get(url)
+    response = safe_get(url)
     data = response.json()
     if 'bpi' in data:
         historical_prices = pd.Series(data['bpi']).sort_index()
@@ -78,8 +104,8 @@ def tabular_regression(historical_data):
 st.header('Bitcoin Price Tracker :chart_with_upwards_trend:')
 
 # Display current time in Tehran
-url = 'http://worldtimeapi.org/api/timezone/Asia/Tehran'
-response = requests.get(url)
+url = 'https://worldtimeapi.org/api/timezone/Asia/Tehran'
+response = safe_get(url)
 tehran_time = response.json()['datetime']
 time_format = '%Y-%m-%dT%H:%M:%S.%f%z'
 tehran_time_formatted = datetime.strptime(tehran_time, time_format).strftime('%Y-%m-%d %H:%M:%S %Z')
@@ -93,7 +119,7 @@ else:
     st.sidebar.write(f'Current local time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z")}')
 
 # Display current Bitcoin price
-currency = st.sidebar.selectbox('Select Currency', ['USD', 'EUR', 'GBP'])
+currency = st.sidebar.selectbox('Select Currency', ALLOWED_CURRENCIES)
 current_price = get_current_bitcoin_price(currency)
 st.write(f'Current Bitcoin Price in {currency}: **{current_price}**')
 

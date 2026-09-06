@@ -1,6 +1,6 @@
 ---
-title: Game
-emoji: ⚡
+title: Bitcoin Price Tracker
+emoji: 📈
 colorFrom: indigo
 colorTo: pink
 sdk: streamlit
@@ -11,41 +11,80 @@ pinned: false
 
 # Bitcoin Price Tracker
 
-A Streamlit web app for tracking Bitcoin prices, displaying trading signals, and running simple predictive models.
+A lightweight **Streamlit** web app for tracking Bitcoin prices in real time, generating simple RSI/MACD trading signals, and experimenting with basic price prediction and trading simulation.
 
-## Features
+## ✨ Features
 
-- **Live Bitcoin price** in USD, EUR, or GBP via the CoinDesk API
-- **Tehran time** display in the sidebar
+- **Live Bitcoin price** in USD, EUR, or GBP (via the CoinDesk API)
+- **Tehran time** displayed in the sidebar (via WorldTimeAPI)
 - **Trading signals** based on RSI and MACD indicators
-- **Historical price chart** (last 30 days)
-- **Tabular regression** price prediction (`pytest.py`)
-- **Custom Bitcoin trading environment** for simulation (`pytest.py`)
+- **Historical price chart** for the last 30 days
+- **Tabular regression** forecast of the next 7 days using linear regression (`pytest.py`)
+- **Custom Bitcoin trading environment** for simple buy/sell/hold simulations with a $1,000 starting portfolio (`pytest.py`)
 
-## Files
+## 📁 Project Structure
 
-- `app.py` — Main Streamlit app (price tracker, RSI/MACD signals, chart)
-- `pytest.py` — Experimental app with linear regression and a custom trading environment
-- `requirements.txt` — Python dependencies
+| File | Description |
+|------|-------------|
+| `app.py` | Main Streamlit app: live price, RSI/MACD signals, 30-day chart |
+| `pytest.py` | Experimental app: 7-day linear-regression forecast + custom trading environment (despite the name, nothing to do with the pytest test framework) |
+| `requirements.txt` | Python dependencies |
 
-## Setup
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.8+
+
+### Installation
 
 ```bash
+git clone https://github.com/tahatehran/Bitcoin-Price-Tracker.git
+cd Bitcoin-Price-Tracker
 pip install -r requirements.txt
-streamlit run app.py
 ```
 
-## Usage
+### Running the App
 
-1. Select a currency from the sidebar.
-2. View the current Bitcoin price and trading signals.
+```bash
+# Main app: price tracker, signals, and chart
+streamlit run app.py
+
+# Experimental version: regression forecast and trading simulation
+streamlit run pytest.py
+```
+
+The app opens in your browser at `http://localhost:8501` by default.
+
+## 📖 Usage
+
+1. Pick a currency (**USD / EUR / GBP**) from the sidebar.
+2. View the current Bitcoin price and the buy/sell signal counts.
 3. Use the **Refresh** button to fetch the latest data.
+4. In `pytest.py`, you can also switch the displayed time zone (Tehran / UTC / Local).
 
-## APIs
+## 📊 How the Signals Work
 
-- [CoinDesk Bitcoin Price Index](https://www.coindesk.com/coindesk-api)
-- [WorldTimeAPI](https://worldtimeapi.org/) for Tehran time
+A signal fires only when **both** conditions align:
 
-## License
+| Indicator | Buy Signal | Sell Signal |
+|-----------|------------|-------------|
+| RSI (14-day) | RSI < 30 (oversold) | RSI > 70 (overbought) |
+| MACD (12/26/9) | MACD above the signal line | MACD below the signal line |
+
+## 🛰️ APIs Used
+
+- [CoinDesk Bitcoin Price Index API](https://www.coindesk.com/coindesk-api) — current and historical BTC prices
+- [WorldTimeAPI](https://worldtimeapi.org/) — current Tehran time
+
+## ☁️ Deploying to Hugging Face Spaces
+
+The YAML block at the top of this file contains the [Hugging Face Spaces](https://huggingface.co/spaces) configuration (Streamlit SDK). Fork the repo, create a new Space from it, and the app deploys automatically.
+
+## ⚠️ Disclaimer
+
+This project is for **educational purposes only**. The indicators and predictions are naive and must not be used as the basis for real investment decisions.
+
+## 📄 License
 
 Copyright © 2023 Taha Tehrani Nasab. All rights reserved.
